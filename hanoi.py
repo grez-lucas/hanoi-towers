@@ -14,17 +14,21 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+GOLD = (239, 229, 51)
+GREY = (170, 170, 170)
+
 
 # Configuración de los discos
-num_discs = 3
+num_disks = 3
 tower_width = 20
 tower_height = 150
 disc_height = 20
 towers = [[], [], []]
+game_over = False
 
 # Crear discos y apilarlos en la primera torre
-for i in range(num_discs):
-    width = (num_discs - i) * 60
+for i in range(num_disks):
+    width = (num_disks - i) * 60
     disc = pygame.Rect(200 - width // 2, 450 - (i + 1) * disc_height, width, disc_height)
     towers[0].append(disc)
 
@@ -34,6 +38,45 @@ tower_positions = [
     (400, 450),
     (600, 450)
 ]
+
+def blit_text(screen, text, midtop, aa=True, font=None, font_name = None, size = None, color=(255,0,0)):
+    if font is None:                                    
+        font = pygame.font.SysFont(font_name, size)     
+    font_surface = font.render(text, aa, color)
+    font_rect = font_surface.get_rect()
+    font_rect.midtop = midtop
+    screen.blit(font_surface, font_rect)
+
+def menu_screen():
+    global screen, num_disks, game_over
+    menu_over = False
+    while not menu_over:
+        screen.fill(WHITE)
+        blit_text(screen, 'Towers of Hanoi', (323,122), font_name='sans serif', size=90, color=GREY)
+        blit_text(screen, 'Towers of Hanoi', (320,120), font_name='sans serif', size=90, color=GOLD)
+        blit_text(screen, 'Use arrow keys to select difficulty:', (320, 220), font_name='sans serif', size=30, color=BLACK)
+        blit_text(screen, str(num_disks), (320, 260), font_name='sans serif', size=40, color=BLUE)
+        blit_text(screen, 'Press ENTER to continue', (320, 320), font_name='sans_serif', size=30, color=BLACK)
+
+        for event in pygame.event.get():
+            if event.type==pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    menu_over = True
+                    game_done = True
+                if event.key == pygame.K_RETURN:
+                    menu_over = True
+                if event.key in [pygame.K_RIGHT, pygame.K_UP]:
+                    num_disks += 1
+                    if num_disks > 10:
+                        num_disks = 10
+                if event.key in [pygame.K_LEFT, pygame.K_DOWN]:
+                    num_disks -= 1
+                    if num_disks < 3:
+                        num_disks = 3
+            if event.type == pygame.QUIT:
+                menu_over = True
+                game_over = True
+        pygame.display.flip()
 
 # Función para dibujar torres y discos
 def draw():
@@ -50,10 +93,10 @@ def draw():
 
 # Función principal del juego
 def hanoi_game():
+    global game_over
     selected_disc = None
     selected_tower = None
-    running = True
-    while running:
+    while not game_over:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -85,4 +128,5 @@ def hanoi_game():
 
 # Llamar a la función principal
 if __name__ == '__main__':
+    menu_screen()
     hanoi_game()
