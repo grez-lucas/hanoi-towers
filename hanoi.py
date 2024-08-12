@@ -58,6 +58,7 @@ disk_height = 20
 towers = [[], [], []]
 disk_colors = [RED, GREEN, BLUE, GOLD, GREY, CYAN, MAGENTA, ORANGE]
 game_over = False
+game_mode = 'PLAY'
 
 # Posiciones de las torres
 tower_positions = [
@@ -94,32 +95,45 @@ def blit_text(screen, text, midtop, aa=True, font=None, font_name = None, size =
     screen.blit(font_surface, font_rect)
 
 def menu_screen():
-    global screen, num_disks, game_over
+    global screen, num_disks, game_over, game_mode
     menu_over = False
+
     while not menu_over:
         screen.fill(WHITE)
-        blit_text(screen, 'Towers of Hanoi', (323,122), font_name='sans serif', size=90, color=GREY)
-        blit_text(screen, 'Towers of Hanoi', (320,120), font_name='sans serif', size=90, color=GOLD)
-        blit_text(screen, 'Use arrow keys to select difficulty:', (320, 220), font_name='sans serif', size=30, color=BLACK)
-        blit_text(screen, str(num_disks), (320, 260), font_name='sans serif', size=40, color=BLUE)
-        blit_text(screen, 'Press ENTER to continue', (320, 320), font_name='sans_serif', size=30, color=BLACK)
+        blit_text(screen, 'Towers of Hanoi', (screen_width // 2, 50), font_name='sans serif', size=90, color=GREEN)
+        blit_text(screen, 'Towers of Hanoi', (screen_width // 2, 45), font_name='sans serif', size=90, color=BLACK)
+        blit_text(screen, 'Use arrow keys to select difficulty and game mode:', (screen_width // 2, 120), font_name='sans serif', size=30, color=BLACK)
+        
+        blit_text(screen, f'LEVEL: {num_disks}', (screen_width // 2, 225), font_name='sans serif', size=40, color=BLACK)
+
+        blit_text(screen, '( DEMO )' if game_mode == 'DEMO' else 'DEMO', (screen_width // 2, 290), font_name='sans serif', size=50, color=BLACK)
+        blit_text(screen, '( PLAY )' if game_mode == 'PLAY' else 'PLAY', (screen_width // 2, 350), font_name='sans serif', size=50, color=BLACK)
+
+        blit_text(screen, 'Press ENTER to continue', (screen_width // 2, 500), font_name='sans_serif', size=30, color=BLACK)
 
         for event in pygame.event.get():
             if event.type==pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     menu_over = True
-                    game_done = True
-                if event.key == pygame.K_RETURN:
+                    game_over = True
+                elif event.key == pygame.K_RETURN:
                     menu_over = True
                     build_disks()
-                if event.key in [pygame.K_RIGHT, pygame.K_UP]:
+                elif event.key == pygame.K_RIGHT:
                     num_disks += 1
                     if num_disks > 10:
                         num_disks = 10
-                if event.key in [pygame.K_LEFT, pygame.K_DOWN]:
+                elif event.key == pygame.K_LEFT:
                     num_disks -= 1
                     if num_disks < 3:
                         num_disks = 3
+                elif event.key in [pygame.K_DOWN, pygame.K_UP]:
+                    if game_mode == 'PLAY':
+                        game_mode = 'DEMO'
+                    else:
+                        game_mode = 'PLAY'
+                        
+                
             if event.type == pygame.QUIT:
                 menu_over = True
                 game_over = True
