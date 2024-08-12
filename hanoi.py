@@ -5,7 +5,9 @@ import sys
 pygame.init()
 
 # Configuración de la pantalla
-screen = pygame.display.set_mode((800, 600))
+screen_width = 800
+screen_height = 600
+screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption('Torres de Hanoi')
 
 # Colores
@@ -31,6 +33,22 @@ class Disk:
         self.rect.centerx = x
         self.rect.y = y
 
+class Button:
+    def __init__(self, text, x, y, width, height, action=None):
+        self.text = text
+        self.rect = pygame.Rect(x, y, width, height)
+        self.action = action
+
+    def draw(self, screen, font_name='sans_serif', font_size=20, text_color=BLACK, button_color=GREY):
+        pygame.draw.rect(screen, button_color, self.rect)
+        font = pygame.font.SysFont(font_name, font_size)
+        text_surface = font.render(self.text, True, text_color)
+        text_rect = text_surface.get_rect(center=self.rect.center)
+        screen.blit(text_surface, text_rect)
+
+    def is_clicked(self, pos):
+        return self.rect.collidepoint(pos)
+
 # Configuración de los discos
 num_disks = 3
 tower_width = 15
@@ -47,6 +65,8 @@ tower_positions = [
     (600, 450)
 ]
 
+menu_button_width = 100
+menu_button = Button('Menu', screen_width - menu_button_width - 10, 10, menu_button_width, 40)
 
 def build_disks():
     global towers
@@ -107,6 +127,7 @@ def draw():
     screen.fill(WHITE)
     draw_towers()
     draw_disks()
+    menu_button.draw(screen)
     pygame.display.flip()
 
 def draw_towers():
@@ -131,6 +152,9 @@ def hanoi_game():
                 break
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
+                if menu_button.is_clicked(pos):
+                    menu_screen()
+                    build_disks() # Rebuilds disks after returning from the menu
                 for i, tower in enumerate(towers):
                     if tower and tower[-1].rect.collidepoint(pos):
                         selected_disk = tower[-1]
