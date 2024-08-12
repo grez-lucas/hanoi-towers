@@ -100,16 +100,17 @@ def menu_screen():
 
     while not menu_over:
         screen.fill(WHITE)
-        blit_text(screen, 'Towers of Hanoi', (screen_width // 2, 50), font_name='sans serif', size=90, color=GREEN)
-        blit_text(screen, 'Towers of Hanoi', (screen_width // 2, 45), font_name='sans serif', size=90, color=BLACK)
+        blit_text(screen, 'Towers of Hanoi' if not game_over else 'VICTORY!', (screen_width // 2, 50), font_name='sans serif', size=90, color=GREEN)
+        blit_text(screen, 'Towers of Hanoi' if not game_over else 'VICTORY!', (screen_width // 2, 45), font_name='sans serif', size=90, color=BLACK)
         blit_text(screen, 'Use arrow keys to select difficulty and game mode:', (screen_width // 2, 120), font_name='sans serif', size=30, color=BLACK)
-        
+
         blit_text(screen, f'LEVEL: {num_disks}', (screen_width // 2, 225), font_name='sans serif', size=40, color=BLACK)
 
         blit_text(screen, '( DEMO )' if game_mode == 'DEMO' else 'DEMO', (screen_width // 2, 290), font_name='sans serif', size=50, color=BLACK)
         blit_text(screen, '( PLAY )' if game_mode == 'PLAY' else 'PLAY', (screen_width // 2, 350), font_name='sans serif', size=50, color=BLACK)
 
         blit_text(screen, 'Press ENTER to continue', (screen_width // 2, 500), font_name='sans_serif', size=30, color=BLACK)
+        blit_text(screen, 'Or Q to exit', (screen_width // 2, 525), font_name='sans_serif', size=30, color=BLACK)
 
         for event in pygame.event.get():
             if event.type==pygame.KEYDOWN:
@@ -118,6 +119,7 @@ def menu_screen():
                     game_over = True
                 elif event.key == pygame.K_RETURN:
                     menu_over = True
+                    game_over = False
                     build_disks()
                 elif event.key == pygame.K_RIGHT:
                     num_disks += 1
@@ -165,6 +167,10 @@ def draw_disks():
         for disk in tower:
             pygame.draw.rect(screen, disk.color, disk.rect)
 
+def check_win_condition():
+    # Win condition: All disks on the right tower
+    return len(towers[2]) == num_disks
+
 # Función principal del juego
 def hanoi_game():
     global game_over, move_count
@@ -211,6 +217,10 @@ def hanoi_game():
                     dragging_disk = False
 
             draw(selected_disk)
+
+            if check_win_condition():
+                game_over = True
+                menu_screen()
 
     pygame.quit()
     sys.exit()
