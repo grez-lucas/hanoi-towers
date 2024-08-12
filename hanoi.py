@@ -16,21 +16,29 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 GOLD = (239, 229, 51)
 GREY = (170, 170, 170)
+CYAN = (0, 255, 255)
+MAGENTA = (255, 0, 255)
+ORANGE = (255, 165, 0)
 
+
+class Disk:
+    def __init__(self, color, width, height, tower_index, x, y):
+        self.color = color
+        self.rect = pygame.Rect(x, y, width, height)
+        self.tower_index = tower_index
+
+    def move_to(self, x, y):
+        self.rect.centerx = x
+        self.rect.y = y
 
 # Configuración de los discos
 num_disks = 3
-tower_width = 20
-tower_height = 150
-disc_height = 20
+tower_width = 15
+tower_height = 250
+disk_height = 20
 towers = [[], [], []]
+disk_colors = [RED, GREEN, BLUE, GOLD, GREY, CYAN, MAGENTA, ORANGE]
 game_over = False
-
-# Crear discos y apilarlos en la primera torre
-for i in range(num_disks):
-    width = (num_disks - i) * 60
-    disc = pygame.Rect(200 - width // 2, 450 - (i + 1) * disc_height, width, disc_height)
-    towers[0].append(disc)
 
 # Posiciones de las torres
 tower_positions = [
@@ -38,6 +46,21 @@ tower_positions = [
     (400, 450),
     (600, 450)
 ]
+
+
+def build_disks():
+    global towers
+
+    # Clean towers
+    towers = [[], [], []]
+
+    # Create disks and apply them on the first tower
+    for i in range(num_disks):
+        width = (num_disks - i) * 30
+        x = tower_positions[0][0] - width // 2
+        y = tower_positions[0][1] - (i + 1) * disk_height
+        disk = Disk(disk_colors[i % len(disk_colors)], width, disk_height, 0, x, y)
+        towers[0].append(disk)
 
 def blit_text(screen, text, midtop, aa=True, font=None, font_name = None, size = None, color=(255,0,0)):
     if font is None:                                    
@@ -65,6 +88,7 @@ def menu_screen():
                     game_done = True
                 if event.key == pygame.K_RETURN:
                     menu_over = True
+                    build_disks()
                 if event.key in [pygame.K_RIGHT, pygame.K_UP]:
                     num_disks += 1
                     if num_disks > 10:
@@ -81,45 +105,48 @@ def menu_screen():
 # Función para dibujar torres y discos
 def draw():
     screen.fill(WHITE)
+    draw_towers()
+    draw_disks()
+    pygame.display.flip()
+
+def draw_towers():
     # Dibujar torres
     for x, y in tower_positions:
         pygame.draw.rect(screen, BLACK, (x - tower_width // 2, y - tower_height, tower_width, tower_height))
-    # Dibujar discos
-    colors = [RED, GREEN, BLUE]
+
+def draw_disks():
     for tower in towers:
-        for disc in tower:
-            pygame.draw.rect(screen, colors[tower.index(disc) % len(colors)], disc)
-    pygame.display.flip()
+        for disk in tower:
+            pygame.draw.rect(screen, disk.color, disk.rect)
 
 # Función principal del juego
 def hanoi_game():
     global game_over
-    selected_disc = None
+    selected_disk = None
     selected_tower = None
     while not game_over:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                game_over = True
                 break
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 for i, tower in enumerate(towers):
-                    if tower and tower[-1].collidepoint(pos):
-                        selected_disc = tower[-1]
+                    if tower and tower[-1].rect.collidepoint(pos):
+                        selected_disk = tower[-1]
                         selected_tower = i
                         break
             elif event.type == pygame.MOUSEBUTTONUP:
-                if selected_disc:
+                if selected_disk:
                     pos = pygame.mouse.get_pos()
                     for i, (tower_x, tower_y) in enumerate(tower_positions):
                         if abs(pos[0] - tower_x) < 50:
-                            if not towers[i] or towers[i][-1].width > selected_disc.width:
-                                towers[selected_tower].remove(selected_disc)
-                                selected_disc.centerx = tower_x
-                                selected_disc.y = 450 - (len(towers[i]) + 1) * disc_height
-                                towers[i].append(selected_disc)
+                            if not towers[i] or towers[i][-1].rect.width > selected_disk.rect.width:
+                                towers[selected_tower].remove(selected_disk)
+                                selected_disk.move_to(tower_x,450 - (len(towers[i]) + 1) * disk_height ) 
+                                towers[i].append(selected_disk)
                             break
-                    selected_disc = None
+                    selected_disk = None
 
         draw()
 
