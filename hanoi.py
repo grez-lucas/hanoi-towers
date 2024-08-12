@@ -51,6 +51,7 @@ class Button:
 
 # Configuración de los discos
 num_disks = 3
+move_count = 0
 tower_width = 15
 tower_height = 250
 disk_height = 20
@@ -128,6 +129,10 @@ def draw():
     draw_towers()
     draw_disks()
     menu_button.draw(screen)
+
+    blit_text(screen, f"Current Moves: {move_count}", (screen_width - 70, 60), font_name='sans_serif', size=20, color=BLACK)
+    blit_text(screen, f"Level: {num_disks}", (screen_width - 70, 80), font_name='sans_serif', size=20, color=BLACK)
+
     pygame.display.flip()
 
 def draw_towers():
@@ -142,7 +147,7 @@ def draw_disks():
 
 # Función principal del juego
 def hanoi_game():
-    global game_over
+    global game_over, move_count
     selected_disk = None
     selected_tower = None
     while not game_over:
@@ -169,6 +174,7 @@ def hanoi_game():
                                 towers[selected_tower].remove(selected_disk)
                                 selected_disk.move_to(tower_x,450 - (len(towers[i]) + 1) * disk_height ) 
                                 towers[i].append(selected_disk)
+                                move_count += 1
                             break
                     selected_disk = None
 
