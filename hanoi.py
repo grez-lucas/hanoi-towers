@@ -1,6 +1,8 @@
 import pygame
 import sys
 import time
+import pickle
+import os
 
 # Inicializar Pygame
 pygame.init()
@@ -23,6 +25,78 @@ CYAN = (0, 255, 255)
 MAGENTA = (255, 0, 255)
 ORANGE = (255, 165, 0)
 
+# Archivo para guardar puntajes
+scores_file = 'scores.pkl'
+
+# Cargar arhivo de puntajes
+def load_scores():
+    if os.path.exists(scores_file):
+        with open(scores_file, "rb") as f:
+            return pickle.load(f)
+    else:
+        return {}
+    
+def save_scores(scores):
+    with open(scores_file, "wb") as f:
+        pickle.dump(scores, f)
+
+def add_score(name, moves, level):
+    scores = load_scores()
+    if level not in scores:
+        scores[level] = []
+    scores[level].append((name, moves))
+    scores[level] = sorted(scores[level], key=lambda x: x[1])[:5]
+    save_scores(scores)
+
+def show_scoreboard():
+    scores = load_scores()
+    screen.fill(WHITE)
+    blit_text(screen, "Scoreboard", (screen_width // 2, 50), font_name='sans serif', size=50, color=BLACK)
+    y = 150
+    for level, entries in sorted(scores.items()):
+        blit_text(screen, f"Level {level}:", (screen_width // 4, y), font_name='sans serif', size=30, color=BLACK)
+        for i, (name, moves) in enumerate(entries):
+            blit_text(screen, f"{i + 1}. {name} - {moves} moves", (screen_width // 2, y + (i + 1) * 30), font_name='sans serif', size=25, color=BLACK)
+        y += (len(entries) + 1) * 30
+    blit_text(screen, "Press ENTER to return to menu", (screen_width // 2, screen_height - 50), font_name='sans serif', size=25, color=BLACK)
+    pygame.display.flip()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    waiting = False
+                    break
+                
+def input_name():
+    name = ""
+    screen.fill(WHITE)
+    blit_text(screen, "Enter your name:", (screen_width // 2, screen_height // 2 - 50), font_name='sans serif', size=50, color=BLACK)
+    pygame.display.flip()
+
+    typing = True
+    while typing:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    typing = False
+                elif event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                else:
+                    name += event.unicode
+        screen.fill(WHITE)
+        blit_text(screen, "Enter your name:", (screen_width // 2, screen_height // 2 - 50), font_name='sans serif', size=50, color=BLACK)
+        blit_text(screen, name, (screen_width // 2, screen_height // 2 + 50), font_name='sans serif', size=50, color=BLACK)
+        pygame.display.flip()
+
+    return name
 
 class Disk:
     def __init__(self, color, width, height, tower_index, x, y):
@@ -236,8 +310,11 @@ def hanoi_game():
                 draw(selected_disk)
 
                 if check_win_condition():
+                    name = input_name()
+                    add_score(name, move_count, num_disks)
                     move_count = 0
                     game_over = True
+                    show_scoreboard()
                     menu_screen()
 
         elif game_mode == 'DEMO':
