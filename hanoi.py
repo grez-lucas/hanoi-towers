@@ -1,5 +1,6 @@
 import pygame
 import sys
+import time
 
 # Inicializar Pygame
 pygame.init()
@@ -171,56 +172,82 @@ def check_win_condition():
     # Win condition: All disks on the right tower
     return len(towers[2]) == num_disks
 
-# Función principal del juego
+def move_disk(from_tower, to_tower):
+    global move_count
+    disk = towers[from_tower].pop()
+    towers[to_tower].append(disk)
+    target_x, target_y = tower_positions[to_tower][0], 450 - len(towers[to_tower]) * disk_height
+    disk.move_to(target_x, target_y)
+    move_count += 1
+    draw()
+    time.sleep(0.4)  # Add delay to see the move
+
+def solve_hanoi(n, source, target, auxiliary):
+    if n > 0:
+        solve_hanoi(n - 1, source, auxiliary, target)
+        move_disk(source, target)
+        solve_hanoi(n - 1, auxiliary, target, source)
+
 def hanoi_game():
     global game_over, move_count
     selected_disk = None
     selected_tower = None
     original_position = None
     dragging_disk = False
-
+    
     while not game_over:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game_over = True
-                break
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                if menu_button.is_clicked(pos):
-                    menu_screen()
-                    build_disks() # Rebuilds disks after returning from the menu
-                for i, tower in enumerate(towers):
-                    if tower and tower[-1].rect.collidepoint(pos):
-                        selected_disk = tower[-1]
-                        selected_tower = i
-                        original_position = (selected_disk.rect.centerx, selected_disk.rect.y)
-                        selected_disk.move_to(*floating_disk_position)
-                        dragging_disk = True
-                        break
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                if dragging_disk:
+        if game_mode == 'PLAY':
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    game_over = True
+                    break
+                elif event.type == pygame.MOUSEBUTTONDOWN:
                     pos = pygame.mouse.get_pos()
-                    placed = False
-                    for i, (tower_x, tower_y) in enumerate(tower_positions):
-                        if abs(pos[0] - tower_x) < 50:
-                            if not towers[i] or towers[i][-1].rect.width > selected_disk.rect.width:
-                                towers[selected_tower].remove(selected_disk)
-                                selected_disk.move_to(tower_x,450 - (len(towers[i]) + 1) * disk_height ) 
-                                towers[i].append(selected_disk)
-                                move_count += 1
-                                placed = True
-                        if not placed:
-                            # Move the disk back to its original position
-                            selected_disk.move_to(*original_position)
-                    selected_disk = None
-                    dragging_disk = False
+                    if menu_button.is_clicked(pos):
+                        menu_screen()
+                        build_disks() # Rebuilds disks after returning from the menu
+                    for i, tower in enumerate(towers):
+                        if tower and tower[-1].rect.collidepoint(pos):
+                            selected_disk = tower[-1]
+                            selected_tower = i
+                            original_position = (selected_disk.rect.centerx, selected_disk.rect.y)
+                            selected_disk.move_to(*floating_disk_position)
+                            dragging_disk = True
+                            break
 
-            draw(selected_disk)
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if dragging_disk:
+                        pos = pygame.mouse.get_pos()
+                        placed = False
+                        for i, (tower_x, tower_y) in enumerate(tower_positions):
+                            if abs(pos[0] - tower_x) < 50:
+                                if not towers[i] or towers[i][-1].rect.width > selected_disk.rect.width:
+                                    towers[selected_tower].remove(selected_disk)
+                                    selected_disk.move_to(tower_x,450 - (len(towers[i]) + 1) * disk_height ) 
+                                    towers[i].append(selected_disk)
+                                    move_count += 1
+                                    placed = True
+                            if not placed:
+                                # Move the disk back to its original position
+                                selected_disk.move_to(*original_position)
+                        selected_disk = None
+                        dragging_disk = False
 
-            if check_win_condition():
-                game_over = True
-                menu_screen()
+                draw(selected_disk)
+
+                if check_win_condition():
+                    move_count = 0
+                    game_over = True
+                    menu_screen()
+
+        elif game_mode == 'DEMO':
+            build_disks()
+            draw()
+            time.sleep(1)
+            solve_hanoi(num_disks, 0, 2, 1)
+            move_count= 0 
+            game_over = True
+            menu_screen()
 
     pygame.quit()
     sys.exit()
